@@ -893,7 +893,10 @@
         // Get prayer times from hardcoded timetable
         function getPrayerTimesFromTimetable() {
             const today = new Date();
-            const dateString = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`; // Local date YYYY-MM-DD
 
             const mosqueTimetable = ramadanTimetable2026[currentMosque];
             const dayData = mosqueTimetable.find(day => day.date === dateString);
