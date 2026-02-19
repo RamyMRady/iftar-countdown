@@ -437,7 +437,7 @@
 
     <div class="container">
         <h1 id="pageTitle">🌙 Iftar Countdown</h1>
-        <div class="location" id="mosqueLocation">Muslim Community Association<br>Santa Clara, California</div>
+        <div class="location" id="mosqueLocation"></div>
 
         <!-- Selectors -->
         <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin: 15px 0;">
@@ -513,7 +513,7 @@
             <div>Ramadan Mubarak! 🌙</div>
             <div class="creator">Created by Ramy Rady</div>
             <div style="margin-top: 10px;">
-                <a href="https://www.mcabayarea.org" target="_blank" class="mca-link">Visit MCA Bay Area →</a>
+                <a href="#" id="mosqueLink" target="_blank" class="mca-link"></a>
             </div>
 
             <div class="share-buttons">
@@ -547,34 +547,47 @@
                 city: 'Santa Clara',
                 lat: 37.3541,
                 lng: -121.9552,
-                adjustment: 3 // minutes to add to Maghrib
+                adjustment: 3, // minutes to add to Maghrib
+                website: 'https://www.mcabayarea.org',
+                linkText: 'Visit MCA Bay Area'
             },
             sbia: {
                 name: 'South Bay Islamic Association',
                 city: 'San Jose',
                 lat: 37.2502,
                 lng: -121.8634,
-                adjustment: 3
+                adjustment: 3,
+                website: 'https://www.sbia.us',
+                linkText: 'Visit SBIA'
             },
             alnoor: {
                 name: 'Masjid Al-Noor',
                 city: 'Santa Clara',
                 lat: 37.3688,
                 lng: -121.9644,
-                adjustment: 3
+                adjustment: 3,
+                website: 'https://www.masjidalnoorscc.org',
+                linkText: 'Visit Masjid Al-Noor'
             },
             mcc: {
                 name: 'Muslim Community Center',
                 city: 'Pleasanton',
                 lat: 37.6624,
                 lng: -121.8747,
-                adjustment: 3
+                adjustment: 3,
+                website: 'https://mcceastbay.org',
+                linkText: 'Visit MCC East Bay'
             }
         };
 
         // Get selected mosque from localStorage or default to MCA
         let currentMosque = localStorage.getItem('selectedMosque') || 'mca';
         const mosqueData = mosques[currentMosque];
+
+        // Update mosque location and link on page load
+        document.getElementById('mosqueLocation').innerHTML = mosqueData.name + '<br>' + mosqueData.city + ', California';
+        document.getElementById('mosqueLink').href = mosqueData.website;
+        document.getElementById('mosqueLink').textContent = mosqueData.linkText + ' →';
 
         // Coordinates from selected mosque
         const LATITUDE = mosqueData.lat;
