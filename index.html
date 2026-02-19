@@ -120,6 +120,121 @@
             margin-top: 10px;
         }
 
+        .audio-controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .audio-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .audio-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .audio-btn.active {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .mca-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .mca-link:hover {
+            text-decoration: underline;
+        }
+
+        .volume-control {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .volume-control label {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .volume-slider {
+            width: 200px;
+            height: 6px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-value {
+            color: #667eea;
+            font-weight: bold;
+            min-width: 40px;
+        }
+
+        .toggle-controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #667eea;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
         .loading {
             color: #666;
             font-style: italic;
@@ -156,8 +271,13 @@
 
         <div class="date-info" id="dateInfo">Loading...</div>
 
+        <div class="toggle-controls">
+            <button class="toggle-btn active" id="iftarBtn" onclick="switchCountdown('iftar')">⏰ Countdown to Iftar</button>
+            <button class="toggle-btn" id="suhoorBtn" onclick="switchCountdown('suhoor')">☀️ Countdown to Suhoor</button>
+        </div>
+
         <div class="countdown">
-            <h3>Time Until Iftar</h3>
+            <h3 id="countdownTitle">Time Until Iftar</h3>
             <div class="timer">
                 <div class="time-unit">
                     <span class="number" id="hours">0</span>
@@ -175,17 +295,43 @@
         </div>
 
         <div class="iftar-time">
-            <h2>Today's Iftar Time (Maghrib)</h2>
-            <div class="time" id="iftarTime">--:--</div>
+            <h2 id="prayerTimeTitle">Today's Iftar Time (Maghrib)</h2>
+            <div class="time" id="prayerTime">--:--</div>
         </div>
 
         <div id="message"></div>
 
+        <div class="audio-controls">
+            <button class="audio-btn" id="azanBtn" onclick="toggleAudio('azan')">🕌 Play Azan</button>
+            <button class="audio-btn" id="cannonBtn" onclick="toggleAudio('cannon')">💥 Egyptian Cannon</button>
+            <button class="audio-btn" id="rainBtn" onclick="toggleAudio('rain')">🌧️ Play Rain</button>
+            <button class="audio-btn" id="stopBtn" onclick="stopAudio()" style="display: none;">⏸️ Stop</button>
+        </div>
+
+        <div class="volume-control">
+            <label for="volumeSlider">🔊 Volume:</label>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70" oninput="updateVolume(this.value)">
+            <span class="volume-value" id="volumeValue">70%</span>
+        </div>
+
         <div class="footer">
             <div>Ramadan Mubarak! 🌙</div>
             <div class="creator">Created by Ramy Rady</div>
+            <div style="margin-top: 10px;">
+                <a href="https://www.mcabayarea.org" target="_blank" class="mca-link">Visit MCA Bay Area →</a>
+            </div>
         </div>
     </div>
+
+    <audio id="azanAudio" loop>
+        <source src="azan.mp4" type="audio/mp4">
+    </audio>
+    <audio id="cannonAudio">
+        <source src="cannon.mp4" type="audio/mp4">
+    </audio>
+    <audio id="rainAudio" loop>
+        <source src="https://cdn.pixabay.com/audio/2022/05/13/audio_257112ce99.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         // Santa Clara, CA coordinates
@@ -193,7 +339,26 @@
         const LONGITUDE = -121.9552;
 
         let iftarTimeToday = null;
+        let suhoorTimeToday = null;
         let countdownInterval = null;
+        let currentMode = 'iftar'; // 'iftar' or 'suhoor'
+
+        // Set initial volume
+        const azanAudio = document.getElementById('azanAudio');
+        const cannonAudio = document.getElementById('cannonAudio');
+        const rainAudio = document.getElementById('rainAudio');
+        azanAudio.volume = 0.7;
+        cannonAudio.volume = 0.7;
+        rainAudio.volume = 0.7;
+
+        // Update volume for all audio elements
+        function updateVolume(value) {
+            const volume = value / 100;
+            azanAudio.volume = volume;
+            cannonAudio.volume = volume;
+            rainAudio.volume = volume;
+            document.getElementById('volumeValue').textContent = value + '%';
+        }
 
         // Format time from 24hr to 12hr format
         function formatTime(time24) {
@@ -229,8 +394,35 @@
                 const adjustedMins = adjustedDate.getMinutes().toString().padStart(2, '0');
                 iftarTimeToday = `${adjustedHours}:${adjustedMins}`;
 
-                // Update UI
-                document.getElementById('iftarTime').textContent = formatTime(iftarTimeToday);
+                // Get Fajr time (suhoor ends at Fajr)
+                const fajrTime = timings.Fajr;
+                suhoorTimeToday = fajrTime;
+
+                // Determine which countdown to show by default
+                const now = new Date();
+                const [iHours, iMins] = iftarTimeToday.split(':');
+                const iftarDate = new Date();
+                iftarDate.setHours(parseInt(iHours), parseInt(iMins), 0, 0);
+
+                const [sHours, sMins] = suhoorTimeToday.split(':');
+                const suhoorDate = new Date();
+                suhoorDate.setHours(parseInt(sHours), parseInt(sMins), 0, 0);
+
+                // If suhoor time is in early morning and we need to check tomorrow's suhoor
+                if (suhoorDate < iftarDate) {
+                    suhoorDate.setDate(suhoorDate.getDate() + 1);
+                }
+
+                // Auto-select: if after iftar and before tomorrow's suhoor, show suhoor by default
+                if (now > iftarDate && now < suhoorDate) {
+                    currentMode = 'suhoor';
+                    switchCountdown('suhoor');
+                } else {
+                    // Otherwise show iftar
+                    currentMode = 'iftar';
+                    document.getElementById('prayerTime').textContent = formatTime(iftarTimeToday);
+                    startCountdown();
+                }
 
                 // Update date info
                 const hijriDate = date.hijri;
@@ -238,7 +430,6 @@
                 document.getElementById('dateInfo').textContent =
                     `${gregorianDate.weekday.en}, ${gregorianDate.day} ${gregorianDate.month.en} ${gregorianDate.year} | ${hijriDate.day} ${hijriDate.month.en} ${hijriDate.year}`;
 
-                startCountdown();
             } catch (error) {
                 console.error('Error fetching prayer times:', error);
                 document.getElementById('message').innerHTML =
@@ -252,37 +443,32 @@
 
             countdownInterval = setInterval(() => {
                 const now = new Date();
+                let targetDate;
 
-                // Parse iftar time for today
-                const [hours, minutes] = iftarTimeToday.split(':');
-                const iftarDate = new Date();
-                iftarDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                if (currentMode === 'iftar') {
+                    // Parse iftar time
+                    const [hours, minutes] = iftarTimeToday.split(':');
+                    targetDate = new Date();
+                    targetDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-                // If iftar time has passed today, show message and fetch tomorrow's time
-                if (now > iftarDate) {
-                    document.getElementById('hours').textContent = '0';
-                    document.getElementById('minutes').textContent = '0';
-                    document.getElementById('seconds').textContent = '0';
-                    document.getElementById('message').innerHTML =
-                        '<div style="color: #667eea; font-size: 1.3em; font-weight: bold; margin: 20px 0;">Iftar time has passed for today! 🌙</div>';
+                    // If iftar has passed today, target tomorrow's iftar
+                    if (now > targetDate) {
+                        targetDate.setDate(targetDate.getDate() + 1);
+                    }
+                } else {
+                    // Suhoor mode - countdown to Fajr
+                    const [hours, minutes] = suhoorTimeToday.split(':');
+                    targetDate = new Date();
+                    targetDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-                    // Wait until midnight to refresh
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    tomorrow.setHours(0, 0, 0, 0);
-
-                    const timeUntilMidnight = tomorrow - now;
-                    setTimeout(() => {
-                        document.getElementById('message').innerHTML = '';
-                        fetchPrayerTimes();
-                    }, timeUntilMidnight);
-
-                    clearInterval(countdownInterval);
-                    return;
+                    // If suhoor time has passed today, target tomorrow's suhoor
+                    if (now > targetDate) {
+                        targetDate.setDate(targetDate.getDate() + 1);
+                    }
                 }
 
                 // Calculate time difference
-                const diff = iftarDate - now;
+                const diff = targetDate - now;
                 const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
                 const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
@@ -292,6 +478,56 @@
                 document.getElementById('minutes').textContent = minutesLeft;
                 document.getElementById('seconds').textContent = secondsLeft;
             }, 1000);
+        }
+
+        // Switch between iftar and suhoor countdown
+        function switchCountdown(mode) {
+            currentMode = mode;
+            const iftarBtn = document.getElementById('iftarBtn');
+            const suhoorBtn = document.getElementById('suhoorBtn');
+            const countdownTitle = document.getElementById('countdownTitle');
+            const prayerTimeTitle = document.getElementById('prayerTimeTitle');
+            const prayerTime = document.getElementById('prayerTime');
+
+            document.getElementById('message').innerHTML = '';
+
+            const now = new Date();
+
+            if (mode === 'iftar') {
+                iftarBtn.classList.add('active');
+                suhoorBtn.classList.remove('active');
+                countdownTitle.textContent = 'Time Until Iftar';
+
+                // Check if iftar has passed today
+                const [hours, minutes] = iftarTimeToday.split(':');
+                const iftarDate = new Date();
+                iftarDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+                if (now > iftarDate) {
+                    prayerTimeTitle.textContent = "Tomorrow's Iftar Time (Maghrib)";
+                } else {
+                    prayerTimeTitle.textContent = "Today's Iftar Time (Maghrib)";
+                }
+                prayerTime.textContent = formatTime(iftarTimeToday);
+            } else {
+                iftarBtn.classList.remove('active');
+                suhoorBtn.classList.add('active');
+                countdownTitle.textContent = 'Time Until Suhoor';
+
+                // Check if suhoor has passed today
+                const [hours, minutes] = suhoorTimeToday.split(':');
+                const suhoorDate = new Date();
+                suhoorDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+                if (now > suhoorDate) {
+                    prayerTimeTitle.textContent = "Tomorrow's Suhoor Ends (Fajr)";
+                } else {
+                    prayerTimeTitle.textContent = "Today's Suhoor Ends (Fajr)";
+                }
+                prayerTime.textContent = formatTime(suhoorTimeToday);
+            }
+
+            startCountdown();
         }
 
         // Initialize on page load
@@ -312,6 +548,66 @@
         }
 
         scheduleNextDayRefresh();
+
+        // Audio control functions
+        let currentAudio = null;
+
+        function toggleAudio(type) {
+            const azanAudio = document.getElementById('azanAudio');
+            const cannonAudio = document.getElementById('cannonAudio');
+            const rainAudio = document.getElementById('rainAudio');
+            const azanBtn = document.getElementById('azanBtn');
+            const cannonBtn = document.getElementById('cannonBtn');
+            const rainBtn = document.getElementById('rainBtn');
+            const stopBtn = document.getElementById('stopBtn');
+
+            // Stop any currently playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            // Reset button states
+            azanBtn.classList.remove('active');
+            cannonBtn.classList.remove('active');
+            rainBtn.classList.remove('active');
+
+            // Play selected audio
+            if (type === 'azan') {
+                azanAudio.play();
+                currentAudio = azanAudio;
+                azanBtn.classList.add('active');
+                stopBtn.style.display = 'inline-block';
+            } else if (type === 'cannon') {
+                cannonAudio.play();
+                currentAudio = cannonAudio;
+                cannonBtn.classList.add('active');
+                stopBtn.style.display = 'inline-block';
+            } else if (type === 'rain') {
+                rainAudio.play();
+                currentAudio = rainAudio;
+                rainBtn.classList.add('active');
+                stopBtn.style.display = 'inline-block';
+            }
+        }
+
+        function stopAudio() {
+            const azanBtn = document.getElementById('azanBtn');
+            const cannonBtn = document.getElementById('cannonBtn');
+            const rainBtn = document.getElementById('rainBtn');
+            const stopBtn = document.getElementById('stopBtn');
+
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
+
+            azanBtn.classList.remove('active');
+            cannonBtn.classList.remove('active');
+            rainBtn.classList.remove('active');
+            stopBtn.style.display = 'none';
+        }
     </script>
 </body>
 </html>
