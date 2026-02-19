@@ -496,7 +496,7 @@
 
         <div class="volume-control">
             <label for="volumeSlider">🔊 Volume:</label>
-            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70" oninput="updateVolume(this.value)">
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70" oninput="updateVolume(this.value)" onchange="updateVolume(this.value)">
             <span class="volume-value" id="volumeValue">70%</span>
         </div>
 
@@ -765,7 +765,36 @@
 
         // Current language
         let currentLang = localStorage.getItem('selectedLanguage') || 'en';
-        const t = translations[currentLang];
+
+        function applyTranslations() {
+            const t = translations[currentLang];
+            document.getElementById('pageTitle').textContent = '🌙 ' + t.title;
+            document.getElementById('mosqueLocation').innerHTML = t.location;
+            document.getElementById('iftarBtn').textContent = t.buttonIftar;
+            document.getElementById('suhoorBtn').textContent = t.buttonSuhoor;
+            document.getElementById('azanBtn').textContent = t.playAzan;
+            document.getElementById('cannonBtn').textContent = t.playCannon;
+            document.getElementById('rainBtn').textContent = t.playRain;
+            document.getElementById('stopBtn').textContent = t.stop;
+            document.querySelector('.volume-control label').textContent = t.volume;
+            document.querySelector('.footer > div:first-child').textContent = t.ramadanMubarak;
+            document.querySelector('.creator').textContent = t.createdBy;
+            document.getElementById('mosqueLink').textContent = t.visitMosque;
+            document.querySelector('.share-btn.share-whatsapp').textContent = t.shareWhatsApp;
+            document.querySelector('.share-btn.share-twitter').textContent = t.shareTwitter;
+            document.querySelector('.share-btn.share-facebook').textContent = t.shareFacebook;
+            document.querySelector('.share-btn.share-copy').textContent = t.shareCopy;
+            document.querySelector('.view-counter').innerHTML = t.pageViews + ' <strong id="viewCount">Loading...</strong>';
+
+            // Apply RTL for Arabic and Urdu
+            if (currentLang === 'ar' || currentLang === 'ur') {
+                document.body.setAttribute('dir', 'rtl');
+            } else {
+                document.body.setAttribute('dir', 'ltr');
+            }
+        }
+
+        applyTranslations();
 
         let iftarTimeToday = null;
         let suhoorTimeToday = null;
@@ -1508,8 +1537,11 @@ END:VCALENDAR`;
         // Change Language
         function changeLanguage() {
             const selectedLang = document.getElementById('langSelector').value;
+            currentLang = selectedLang;
             localStorage.setItem('selectedLanguage', selectedLang);
-            location.reload();
+            applyTranslations();
+            // Re-update view counter label after translation
+            updateViewCounter();
         }
 
         // Initialize selectors
