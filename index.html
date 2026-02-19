@@ -786,6 +786,7 @@
             azanAudio.volume = vol;
             cannonAudio.volume = vol;
             rainAudio.volume = vol;
+            if (currentAudio) currentAudio.volume = vol;
             document.getElementById('volumeValue').textContent = currentVolume + '%';
         }
 
@@ -1140,12 +1141,10 @@
         // Simple view counter using an external API
         async function updateViewCounter() {
             try {
-                // Using countapi.xyz - a free, simple counter API
-                const response = await fetch('https://api.countapi.xyz/hit/ramymrady-iftar-countdown/visits');
+                const response = await fetch('https://api.counterapi.dev/v1/ramymrady-iftar/visits/up');
                 const data = await response.json();
-                document.getElementById('viewCount').textContent = data.value.toLocaleString();
+                document.getElementById('viewCount').textContent = data.count.toLocaleString();
             } catch (error) {
-                // Fallback to localStorage if API fails
                 let views = parseInt(localStorage.getItem('pageViews') || '0');
                 views++;
                 localStorage.setItem('pageViews', views);
@@ -1305,9 +1304,6 @@
         let currentAudio = null;
 
         function toggleAudio(type) {
-            const azanAudio = document.getElementById('azanAudio');
-            const cannonAudio = document.getElementById('cannonAudio');
-            const rainAudio = document.getElementById('rainAudio');
             const azanBtn = document.getElementById('azanBtn');
             const cannonBtn = document.getElementById('cannonBtn');
             const rainBtn = document.getElementById('rainBtn');
