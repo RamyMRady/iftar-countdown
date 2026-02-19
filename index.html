@@ -310,11 +310,38 @@
             font-weight: bold;
         }
 
+        .volume-slider {
+            width: 200px;
+            height: 6px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+        }
+
         .volume-value {
             color: #667eea;
             font-weight: bold;
-            min-width: 50px;
-            text-align: center;
+            min-width: 40px;
         }
 
         .toggle-controls {
@@ -384,6 +411,10 @@
             .toggle-btn, .audio-btn, .share-btn {
                 padding: 10px 14px;
                 font-size: 0.85em;
+            }
+
+            .volume-slider {
+                width: 150px;
             }
 
             .dark-mode-toggle {
@@ -464,7 +495,9 @@
         </div>
 
         <div class="volume-control">
-            <button class="toggle-btn" id="muteBtn" onclick="toggleMute()" style="padding: 10px 24px; font-size: 1.1em;">🔊 Sound On</button>
+            <label for="volumeSlider">🔊 Volume:</label>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70" oninput="updateVolume(this.value)" onchange="updateVolume(this.value)">
+            <span class="volume-value" id="volumeValue">70%</span>
         </div>
 
         <!-- Dua and Export buttons -->
@@ -742,7 +775,8 @@
             document.getElementById('azanBtn').textContent = t.playAzan;
             document.getElementById('cannonBtn').textContent = t.playCannon;
             document.getElementById('rainBtn').textContent = t.playRain;
-            document.getElementById('muteBtn').textContent = isMuted ? '🔇 Sound Off' : '🔊 Sound On';
+            document.getElementById('stopBtn').textContent = t.stop;
+            document.querySelector('.volume-control label').textContent = t.volume;
             document.querySelector('.footer > div:first-child').textContent = t.ramadanMubarak;
             document.querySelector('.creator').textContent = t.createdBy;
             document.getElementById('mosqueLink').textContent = t.visitMosque;
@@ -771,17 +805,17 @@
         const azanAudio = document.getElementById('azanAudio');
         const cannonAudio = document.getElementById('cannonAudio');
         const rainAudio = document.getElementById('rainAudio');
-        let isMuted = false;
+        azanAudio.volume = 0.7;
+        cannonAudio.volume = 0.7;
+        rainAudio.volume = 0.7;
 
-        function toggleMute() {
-            isMuted = !isMuted;
-            azanAudio.muted = isMuted;
-            cannonAudio.muted = isMuted;
-            rainAudio.muted = isMuted;
-            if (currentAudio) currentAudio.muted = isMuted;
-            const btn = document.getElementById('muteBtn');
-            btn.textContent = isMuted ? '🔇 Sound Off' : '🔊 Sound On';
-            btn.classList.toggle('active', isMuted);
+        // Update volume for all audio elements
+        function updateVolume(value) {
+            const volume = value / 100;
+            azanAudio.volume = volume;
+            cannonAudio.volume = volume;
+            rainAudio.volume = volume;
+            document.getElementById('volumeValue').textContent = value + '%';
         }
 
         // Ramadan 2026 Prayer Timetables (Hardcoded from official mosque schedules)
@@ -892,10 +926,7 @@
         // Get prayer times from hardcoded timetable
         function getPrayerTimesFromTimetable() {
             const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const dateString = `${year}-${month}-${day}`; // Local date YYYY-MM-DD
+            const dateString = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
             const mosqueTimetable = ramadanTimetable2026[currentMosque];
             const dayData = mosqueTimetable.find(day => day.date === dateString);
@@ -1242,12 +1273,11 @@
                 hasNotified = true;
                 lastNotificationDate = today;
 
-                // Play azan automatically (only if not muted)
-                if (!isMuted) {
-                    azanAudio.play().catch(() => {
-                        console.log('Auto-play blocked by browser');
-                    });
-                }
+                // Play azan automatically
+                const azanAudio = document.getElementById('azanAudio');
+                azanAudio.play().catch(() => {
+                    console.log('Auto-play blocked by browser');
+                });
 
                 // Show notification
                 const message = currentMode === 'iftar' ? '🌙 Time for Iftar! 🌙' : '☀️ Time for Suhoor! ☀️';
@@ -1298,6 +1328,9 @@
         let currentAudio = null;
 
         function toggleAudio(type) {
+            const azanAudio = document.getElementById('azanAudio');
+            const cannonAudio = document.getElementById('cannonAudio');
+            const rainAudio = document.getElementById('rainAudio');
             const azanBtn = document.getElementById('azanBtn');
             const cannonBtn = document.getElementById('cannonBtn');
             const rainBtn = document.getElementById('rainBtn');
