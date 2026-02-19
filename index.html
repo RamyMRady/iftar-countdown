@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iftar Countdown - MCA Santa Clara</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#667eea">
+    <meta name="apple-mobile-web-app-title" content="Iftar Countdown">
+
+    <!-- Social Media Meta Tags -->
+    <meta property="og:title" content="Iftar Countdown - MCA Santa Clara">
+    <meta property="og:description" content="Real-time countdown to Iftar and Suhoor times at Muslim Community Association, Santa Clara">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+
     <style>
         * {
             margin: 0;
@@ -172,6 +189,114 @@
             color: #667eea;
         }
 
+        .share-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .share-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            color: white;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .share-whatsapp {
+            background: #25D366;
+        }
+
+        .share-twitter {
+            background: #1DA1F2;
+        }
+
+        .share-facebook {
+            background: #1877F2;
+        }
+
+        .share-copy {
+            background: #666;
+        }
+
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: rotate(180deg);
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #2d3561 0%, #3d2d52 100%);
+        }
+
+        body.dark-mode .container {
+            background: #2a2a40;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3 {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .location,
+        body.dark-mode .date-info {
+            color: #b0b0b0;
+        }
+
+        body.dark-mode .time-unit {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .time-unit .number {
+            color: #8b9aee;
+        }
+
+        body.dark-mode .toggle-btn {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .footer {
+            border-top-color: #444;
+            color: #b0b0b0;
+        }
+
+        body.dark-mode .view-counter {
+            background: #1a1a2e;
+            color: #b0b0b0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
         .volume-control {
             margin: 20px 0;
             display: flex;
@@ -262,25 +387,73 @@
         }
 
         @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
             h1 {
-                font-size: 2em;
+                font-size: 1.8em;
             }
 
             .time-unit {
-                min-width: 80px;
-                padding: 15px;
+                min-width: 70px;
+                padding: 12px;
             }
 
             .time-unit .number {
                 font-size: 2em;
             }
+
+            .time-unit .label {
+                font-size: 0.8em;
+            }
+
+            .toggle-btn, .audio-btn, .share-btn {
+                padding: 10px 14px;
+                font-size: 0.85em;
+            }
+
+            .volume-slider {
+                width: 150px;
+            }
+
+            .dark-mode-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.2em;
+            }
+
+            select {
+                width: 100%;
+                max-width: 200px;
+            }
         }
     </style>
 </head>
 <body>
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
+
     <div class="container">
-        <h1>🌙 Iftar Countdown</h1>
-        <div class="location">Muslim Community Association<br>Santa Clara, California</div>
+        <h1 id="pageTitle">🌙 Iftar Countdown</h1>
+        <div class="location" id="mosqueLocation">Muslim Community Association<br>Santa Clara, California</div>
+
+        <!-- Selectors -->
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin: 15px 0;">
+            <select id="mosqueSelector" onchange="changeMosque()" style="padding: 8px; border-radius: 6px; border: 2px solid #667eea;">
+                <option value="mca">MCA - Santa Clara</option>
+                <option value="sbia">SBIA - San Jose</option>
+                <option value="alnoor">Masjid Al-Noor - Santa Clara</option>
+                <option value="mcc">MCC - Pleasanton</option>
+            </select>
+            <select id="langSelector" onchange="changeLanguage()" style="padding: 8px; border-radius: 6px; border: 2px solid #667eea;">
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+                <option value="tr">Türkçe</option>
+                <option value="ur">اردو</option>
+            </select>
+        </div>
 
         <div class="date-info" id="dateInfo">Loading...</div>
 
@@ -316,7 +489,7 @@
 
         <div class="audio-controls">
             <button class="audio-btn" id="azanBtn" onclick="toggleAudio('azan')">🕌 Play Azan</button>
-            <button class="audio-btn" id="cannonBtn" onclick="toggleAudio('cannon')">💥 Egyptian Cannon</button>
+            <button class="audio-btn" id="cannonBtn" onclick="toggleAudio('cannon')">💥 Iftar Cannon (مدفع الافطار)</button>
             <button class="audio-btn" id="rainBtn" onclick="toggleAudio('rain')">🌧️ Play Rain</button>
             <button class="audio-btn" id="stopBtn" onclick="stopAudio()" style="display: none;">⏸️ Stop</button>
         </div>
@@ -327,12 +500,29 @@
             <span class="volume-value" id="volumeValue">70%</span>
         </div>
 
+        <!-- Dua and Export buttons -->
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0;">
+            <button class="audio-btn" onclick="showDua()" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">📿 Show Dua</button>
+            <button class="audio-btn" onclick="exportToCalendar()" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);">📅 Export to Calendar</button>
+        </div>
+
+        <!-- Dua display -->
+        <div id="duaDisplay" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 15px; margin: 20px 0;"></div>
+
         <div class="footer">
             <div>Ramadan Mubarak! 🌙</div>
             <div class="creator">Created by Ramy Rady</div>
             <div style="margin-top: 10px;">
                 <a href="https://www.mcabayarea.org" target="_blank" class="mca-link">Visit MCA Bay Area →</a>
             </div>
+
+            <div class="share-buttons">
+                <a href="#" class="share-btn share-whatsapp" onclick="shareWhatsApp(event)">📱 WhatsApp</a>
+                <a href="#" class="share-btn share-twitter" onclick="shareTwitter(event)">🐦 Twitter</a>
+                <a href="#" class="share-btn share-facebook" onclick="shareFacebook(event)">👍 Facebook</a>
+                <button class="share-btn share-copy" onclick="copyLink()">🔗 Copy Link</button>
+            </div>
+
             <div class="view-counter">
                 👁️ Page Views: <strong id="viewCount">Loading...</strong>
             </div>
@@ -343,16 +533,226 @@
         <source src="azan.mp4" type="audio/mp4">
     </audio>
     <audio id="cannonAudio">
-        <source src="cannon.mp4" type="audio/mp4">
+        <source src="cannon.mp3" type="audio/mpeg">
     </audio>
     <audio id="rainAudio" loop>
         <source src="https://cdn.pixabay.com/audio/2022/05/13/audio_257112ce99.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        // Santa Clara, CA coordinates
-        const LATITUDE = 37.3541;
-        const LONGITUDE = -121.9552;
+        // Mosque data for Bay Area
+        const mosques = {
+            mca: {
+                name: 'Muslim Community Association',
+                city: 'Santa Clara',
+                lat: 37.3541,
+                lng: -121.9552,
+                adjustment: 3 // minutes to add to Maghrib
+            },
+            sbia: {
+                name: 'South Bay Islamic Association',
+                city: 'San Jose',
+                lat: 37.2502,
+                lng: -121.8634,
+                adjustment: 3
+            },
+            alnoor: {
+                name: 'Masjid Al-Noor',
+                city: 'Santa Clara',
+                lat: 37.3688,
+                lng: -121.9644,
+                adjustment: 3
+            },
+            mcc: {
+                name: 'Muslim Community Center',
+                city: 'Pleasanton',
+                lat: 37.6624,
+                lng: -121.8747,
+                adjustment: 3
+            }
+        };
+
+        // Get selected mosque from localStorage or default to MCA
+        let currentMosque = localStorage.getItem('selectedMosque') || 'mca';
+        const mosqueData = mosques[currentMosque];
+
+        // Coordinates from selected mosque
+        const LATITUDE = mosqueData.lat;
+        const LONGITUDE = mosqueData.lng;
+
+        // Duas
+        const duas = {
+            iftar: {
+                breaking: {
+                    arabic: 'اللَّهُمَّ اِنِّى لَكَ صُمْتُ وَبِكَ امنْتُ وَعَليْكَ تَوَكّلتُ وَ عَلى رِزْقِكَ اَفْطَرْتُ',
+                    transliteration: 'Allahumma inni laka sumtu wa bika aamantu wa alayka tawakkaltu wa ala rizq-ika-aftartu',
+                    english: 'O Allah! I fasted for You and I believe in You and I put my trust in You and I break my fast with Your sustenance'
+                },
+                after: {
+                    arabic: 'ذَهَبَ الظَّمَأُ وَابْتَلَّتِ الْعُرُوقُ وَثَبَتَ الأَجْرُ إِنْ شَاءَ اللَّهُ',
+                    transliteration: 'Dhahabaz Zama\'u wab tal latil uruqoo wa thabbatal ajru inshaAllah',
+                    english: 'Thirst has gone, the arteries are moist, and the reward is sure, if Allah wills'
+                },
+                group: {
+                    arabic: 'أفطر عندكم الصائمون ، وأكل طعامكم الأبرار، وصلت عليكم الملائكة',
+                    transliteration: 'aftara indakum as-saa\'imoon, wa akala ta\'aamakum al-abraar, wa sallat alaikum al-malaa\'ikah',
+                    english: 'May the fasting people break fast at your place, and may the pious eat from your food, and may the angels pray for you'
+                }
+            },
+            suhoor: {
+                before: {
+                    arabic: 'اللَّهُمَّ بَارِكْ لَنَا فِيهِ وَأَطْعِمْنَا خَيْراً مِنْهُ',
+                    transliteration: 'Allaahumma baarik lanaa feehi wa \'at\'imnaa khayran minhu',
+                    english: 'O Allah, bless us in it and provide us with better than it'
+                },
+                after: {
+                    arabic: 'وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ',
+                    transliteration: 'Wabi saumi gadin nawaitu min shahri ramadan',
+                    english: 'I Intend to keep the fast of tomorrow in the month of Ramadan'
+                }
+            },
+            taraweeh: {
+                arabic: 'سُبْحَانَ ذِي الْمُلْكِ وَالْمَلَاكُوتِ سُبْحَانَ ذِي الْعِزَّةِ وَالْجَبَرُوتِ وَالْكِبْرِيَاءِ وَالْعَظَمَةِ، وَالْحَيَاةِ الَّتِي لَا يَنَامُ وَلَا يَمُوتُ، سُبُّوحٌ قُدُّوسٌ رَبُّنَا وَرَبُّ الْمَلَائِكَةِ وَالرُّوحِ',
+                transliteration: 'Subhana zil mulki wal malakooti subhana zil izzati wal jabaroot wal kibriyaai wal jabaroot. Wal azamati wal hayati allati la yanamu wala yamoot. Subboohun qud\'doosur-rabuna warabbul malaa\'ikati warruh',
+                english: 'Glory be to Allah, the Possessor of might, dominion, magnificence, and the manifest dominion. He is the Owner of the kingdom of the earth and the heavens. He is free from any imperfection, and none is worthy of worship except Him. He is the Lord of the angels and the Spirit'
+            }
+        };
+
+        // Translations
+        const translations = {
+            en: {
+                title: 'Iftar Countdown',
+                location: mosqueData.name + '<br>' + mosqueData.city + ', California',
+                countdownToIftar: 'Time Until Iftar',
+                countdownToSuhoor: 'Time Until Suhoor',
+                todayIftar: "Today's Iftar Time (Maghrib)",
+                tomorrowIftar: "Tomorrow's Iftar Time (Maghrib)",
+                todaySuhoor: "Today's Suhoor Ends (Fajr)",
+                tomorrowSuhoor: "Tomorrow's Suhoor Ends (Fajr)",
+                buttonIftar: '⏰ Countdown to Iftar',
+                buttonSuhoor: '☀️ Countdown to Suhoor',
+                hours: 'Hours',
+                minutes: 'Minutes',
+                seconds: 'Seconds',
+                playAzan: '🕌 Play Azan',
+                playCannon: '💥 Iftar Cannon (مدفع الافطار)',
+                playRain: '🌧️ Play Rain',
+                stop: '⏸️ Stop',
+                volume: '🔊 Volume:',
+                shareWhatsApp: '📱 WhatsApp',
+                shareTwitter: '🐦 Twitter',
+                shareFacebook: '👍 Facebook',
+                shareCopy: '🔗 Copy Link',
+                pageViews: '👁️ Page Views:',
+                ramadanMubarak: 'Ramadan Mubarak! 🌙',
+                createdBy: 'Created by Ramy Rady',
+                visitMosque: 'Visit Website →',
+                showDua: '📿 Show Dua',
+                exportCalendar: '📅 Export to Calendar',
+                selectMosque: 'Select Mosque:',
+                selectLanguage: 'Language:'
+            },
+            ar: {
+                title: 'العد التنازلي للإفطار',
+                location: mosqueData.name + '<br>' + mosqueData.city + '، كاليفورنيا',
+                countdownToIftar: 'الوقت المتبقي للإفطار',
+                countdownToSuhoor: 'الوقت المتبقي للسحور',
+                todayIftar: 'وقت الإفطار اليوم (المغرب)',
+                tomorrowIftar: 'وقت الإفطار غداً (المغرب)',
+                todaySuhoor: 'نهاية السحور اليوم (الفجر)',
+                tomorrowSuhoor: 'نهاية السحور غداً (الفجر)',
+                buttonIftar: '⏰ العد التنازلي للإفطار',
+                buttonSuhoor: '☀️ العد التنازلي للسحور',
+                hours: 'ساعات',
+                minutes: 'دقائق',
+                seconds: 'ثواني',
+                playAzan: '🕌 تشغيل الأذان',
+                playCannon: '💥 مدفع الإفطار',
+                playRain: '🌧️ صوت المطر',
+                stop: '⏸️ إيقاف',
+                volume: '🔊 مستوى الصوت:',
+                shareWhatsApp: '📱 واتساب',
+                shareTwitter: '🐦 تويتر',
+                shareFacebook: '👍 فيسبوك',
+                shareCopy: '🔗 نسخ الرابط',
+                pageViews: '👁️ عدد الزيارات:',
+                ramadanMubarak: 'رمضان مبارك! 🌙',
+                createdBy: 'من إعداد رامي رادي',
+                visitMosque: 'زيارة الموقع →',
+                showDua: '📿 عرض الدعاء',
+                exportCalendar: '📅 تصدير إلى التقويم',
+                selectMosque: 'اختر المسجد:',
+                selectLanguage: 'اللغة:'
+            },
+            tr: {
+                title: 'İftar Geri Sayımı',
+                location: mosqueData.name + '<br>' + mosqueData.city + ', Kaliforniya',
+                countdownToIftar: 'İftara Kalan Süre',
+                countdownToSuhoor: 'Sahura Kalan Süre',
+                todayIftar: "Bugünün İftar Saati (Akşam)",
+                tomorrowIftar: "Yarının İftar Saati (Akşam)",
+                todaySuhoor: "Bugünün Sahur Bitişi (Sabah)",
+                tomorrowSuhoor: "Yarının Sahur Bitişi (Sabah)",
+                buttonIftar: '⏰ İftar Geri Sayımı',
+                buttonSuhoor: '☀️ Sahur Geri Sayımı',
+                hours: 'Saat',
+                minutes: 'Dakika',
+                seconds: 'Saniye',
+                playAzan: '🕌 Ezan Çal',
+                playCannon: '💥 İftar Topu (مدفع الافطار)',
+                playRain: '🌧️ Yağmur Sesi',
+                stop: '⏸️ Durdur',
+                volume: '🔊 Ses:',
+                shareWhatsApp: '📱 WhatsApp',
+                shareTwitter: '🐦 Twitter',
+                shareFacebook: '👍 Facebook',
+                shareCopy: '🔗 Bağlantıyı Kopyala',
+                pageViews: '👁️ Görüntülenme:',
+                ramadanMubarak: 'Ramazan Mübarek! 🌙',
+                createdBy: 'Ramy Rady tarafından',
+                visitMosque: 'Web Sitesini Ziyaret Et →',
+                showDua: '📿 Duayı Göster',
+                exportCalendar: '📅 Takvime Aktar',
+                selectMosque: 'Cami Seç:',
+                selectLanguage: 'Dil:'
+            },
+            ur: {
+                title: 'افطار کاؤنٹ ڈاؤن',
+                location: mosqueData.name + '<br>' + mosqueData.city + '، کیلیفورنیا',
+                countdownToIftar: 'افطار تک باقی وقت',
+                countdownToSuhoor: 'سحری تک باقی وقت',
+                todayIftar: 'آج کا افطار کا وقت (مغرب)',
+                tomorrowIftar: 'کل کا افطار کا وقت (مغرب)',
+                todaySuhoor: 'آج سحری ختم (فجر)',
+                tomorrowSuhoor: 'کل سحری ختم (فجر)',
+                buttonIftar: '⏰ افطار کاؤنٹ ڈاؤن',
+                buttonSuhoor: '☀️ سحری کاؤنٹ ڈاؤن',
+                hours: 'گھنٹے',
+                minutes: 'منٹ',
+                seconds: 'سیکنڈ',
+                playAzan: '🕌 اذان چلائیں',
+                playCannon: '💥 افطار توپ (مدفع الافطار)',
+                playRain: '🌧️ بارش کی آواز',
+                stop: '⏸️ رکیں',
+                volume: '🔊 آواز:',
+                shareWhatsApp: '📱 واٹس ایپ',
+                shareTwitter: '🐦 ٹویٹر',
+                shareFacebook: '👍 فیس بک',
+                shareCopy: '🔗 لنک کاپی کریں',
+                pageViews: '👁️ ملاحظات:',
+                ramadanMubarak: 'رمضان مبارک! 🌙',
+                createdBy: 'رامی رادی کی طرف سے',
+                visitMosque: 'ویب سائٹ دیکھیں →',
+                showDua: '📿 دعا دکھائیں',
+                exportCalendar: '📅 کیلنڈر میں ایکسپورٹ کریں',
+                selectMosque: 'مسجد منتخب کریں:',
+                selectLanguage: 'زبان:'
+            }
+        };
+
+        // Current language
+        let currentLang = localStorage.getItem('selectedLanguage') || 'en';
+        const t = translations[currentLang];
 
         let iftarTimeToday = null;
         let suhoorTimeToday = null;
@@ -416,25 +816,34 @@
 
                 // Determine which countdown to show by default
                 const now = new Date();
+                const currentHour = now.getHours();
+
+                // Simple logic: if current time is after 12 PM (noon), show suhoor countdown
+                // Since iftar is in evening (around 5-6 PM) and suhoor is early morning (4-6 AM),
+                // anyone visiting after noon until early morning should see suhoor countdown
+
+                console.log('=== AUTO-SELECT DEBUG ===');
+                console.log('Current hour:', currentHour);
+                console.log('Iftar time:', iftarTimeToday);
+                console.log('Suhoor time:', suhoorTimeToday);
+
                 const [iHours, iMins] = iftarTimeToday.split(':');
-                const iftarDate = new Date();
-                iftarDate.setHours(parseInt(iHours), parseInt(iMins), 0, 0);
+                const iftarHour = parseInt(iHours);
 
                 const [sHours, sMins] = suhoorTimeToday.split(':');
-                const suhoorDate = new Date();
-                suhoorDate.setHours(parseInt(sHours), parseInt(sMins), 0, 0);
+                const suhoorHour = parseInt(sHours);
 
-                // If suhoor time is in early morning and we need to check tomorrow's suhoor
-                if (suhoorDate < iftarDate) {
-                    suhoorDate.setDate(suhoorDate.getDate() + 1);
-                }
+                console.log('Iftar hour:', iftarHour);
+                console.log('Suhoor hour:', suhoorHour);
 
-                // Auto-select: if after iftar and before tomorrow's suhoor, show suhoor by default
-                if (now > iftarDate && now < suhoorDate) {
+                // If current time is after iftar time OR before suhoor time, show suhoor
+                // (between evening iftar and early morning suhoor)
+                if (currentHour >= iftarHour || currentHour < suhoorHour) {
+                    console.log('✅ AUTO-SELECTING: Suhoor (evening/night time)');
                     currentMode = 'suhoor';
                     switchCountdown('suhoor');
                 } else {
-                    // Otherwise show iftar
+                    console.log('✅ AUTO-SELECTING: Iftar (daytime)');
                     currentMode = 'iftar';
                     document.getElementById('prayerTime').textContent = formatTime(iftarTimeToday);
                     startCountdown();
@@ -584,6 +993,151 @@
         // Call view counter on page load
         updateViewCounter();
 
+        // Dark mode toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            document.querySelector('.dark-mode-toggle').textContent = isDark ? '☀️' : '🌙';
+        }
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.dark-mode-toggle').textContent = '☀️';
+        }
+
+        // Social sharing functions
+        function shareWhatsApp(e) {
+            e.preventDefault();
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent('Check out this Iftar countdown timer for MCA Santa Clara! 🌙');
+            window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
+        }
+
+        function shareTwitter(e) {
+            e.preventDefault();
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent('Iftar countdown timer for MCA Santa Clara 🌙');
+            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+        }
+
+        function shareFacebook(e) {
+            e.preventDefault();
+            const url = encodeURIComponent(window.location.href);
+
+            // Check if running locally
+            if (window.location.protocol === 'file:') {
+                alert('Facebook sharing will work once the site is live on GitHub Pages!\n\nLink to share: https://ramymrady.github.io/iftar-countdown/');
+                return;
+            }
+
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(() => {
+                alert('Link: ' + window.location.href);
+            });
+        }
+
+        // Notification when countdown reaches zero (only at actual prayer time, not for tomorrow's countdown)
+        let hasNotified = false;
+        let lastNotificationDate = null;
+
+        function checkCountdownZero() {
+            const hours = parseInt(document.getElementById('hours').textContent);
+            const minutes = parseInt(document.getElementById('minutes').textContent);
+            const seconds = parseInt(document.getElementById('seconds').textContent);
+
+            if (hours === 0 && minutes === 0 && seconds <= 1 && !hasNotified) {
+                // Check if we're at the actual prayer time (not counting down to tomorrow)
+                const now = new Date();
+
+                if (currentMode === 'iftar') {
+                    const [iHours, iMins] = iftarTimeToday.split(':');
+                    const iftarDate = new Date();
+                    iftarDate.setHours(parseInt(iHours), parseInt(iMins), 0, 0);
+
+                    // Only notify if we're within 2 minutes of actual iftar time (not tomorrow's)
+                    const timeDiff = Math.abs(now - iftarDate);
+                    if (timeDiff > 120000) return; // More than 2 minutes away, skip
+                } else {
+                    const [sHours, sMins] = suhoorTimeToday.split(':');
+                    const suhoorDate = new Date();
+                    suhoorDate.setHours(parseInt(sHours), parseInt(sMins), 0, 0);
+
+                    // Only notify if we're within 2 minutes of actual suhoor time (not tomorrow's)
+                    const timeDiff = Math.abs(now - suhoorDate);
+                    if (timeDiff > 120000) return; // More than 2 minutes away, skip
+                }
+
+                // Check if we already notified today
+                const today = now.toDateString();
+                if (lastNotificationDate === today && currentMode === 'iftar') return;
+                if (lastNotificationDate === today && currentMode === 'suhoor') return;
+
+                hasNotified = true;
+                lastNotificationDate = today;
+
+                // Play azan automatically
+                const azanAudio = document.getElementById('azanAudio');
+                azanAudio.play().catch(() => {
+                    console.log('Auto-play blocked by browser');
+                });
+
+                // Show notification
+                const message = currentMode === 'iftar' ? '🌙 Time for Iftar! 🌙' : '☀️ Time for Suhoor! ☀️';
+                document.getElementById('message').innerHTML =
+                    `<div style="color: #48bb78; font-size: 1.5em; font-weight: bold; margin: 20px 0; animation: pulse 1s infinite;">${message}</div>`;
+
+                // Request notification permission and show
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('Iftar Countdown', {
+                        body: message,
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌙</text></svg>'
+                    });
+                } else if ('Notification' in window && Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification('Iftar Countdown', {
+                                body: message,
+                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌙</text></svg>'
+                            });
+                        }
+                    });
+                }
+
+                // Clear message after 30 seconds
+                setTimeout(() => {
+                    document.getElementById('message').innerHTML = '';
+                }, 30000);
+
+                // Reset notification flag after 2 minutes
+                setTimeout(() => {
+                    hasNotified = false;
+                }, 120000);
+            }
+        }
+
+        // Check every second for countdown zero
+        setInterval(checkCountdownZero, 1000);
+
+        // Request notification permission on first interaction
+        document.addEventListener('click', function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            document.removeEventListener('click', requestNotificationPermission);
+        }, { once: true });
+
         // Audio control functions
         let currentAudio = null;
 
@@ -595,6 +1149,24 @@
             const cannonBtn = document.getElementById('cannonBtn');
             const rainBtn = document.getElementById('rainBtn');
             const stopBtn = document.getElementById('stopBtn');
+
+            // Show cannon info on first click
+            if (type === 'cannon' && !localStorage.getItem('cannonInfoShown')) {
+                const message = `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; margin: 20px 0; text-align: left;">
+                        <h3 style="color: white; margin-bottom: 10px;">💥 Iftar Cannons (Midfaa Iftar)</h3>
+                        <p style="line-height: 1.6; margin-bottom: 10px;">
+                            A traditional practice dating back to the Ottoman era to signal the end of the daily fast, Iftar cannons are still used in several countries during Ramadan 2026.
+                        </p>
+                        <p style="line-height: 1.6; margin: 0;">
+                            <strong>Key locations include:</strong> UAE (Dubai, Abu Dhabi, Sharjah), Saudi Arabia (Mecca, Jeddah, Medina), Qatar, Bahrain, Kuwait, Jordan, Egypt, and Bosnia and Herzegovina.
+                        </p>
+                        <button onclick="this.parentElement.remove()" style="margin-top: 15px; padding: 8px 16px; background: white; color: #667eea; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Got it!</button>
+                    </div>
+                `;
+                document.getElementById('message').innerHTML = message;
+                localStorage.setItem('cannonInfoShown', 'true');
+            }
 
             // Stop any currently playing audio
             if (currentAudio) {
@@ -643,6 +1215,147 @@
             rainBtn.classList.remove('active');
             stopBtn.style.display = 'none';
         }
+
+        // Show Dua
+        function showDua() {
+            const duaDisplay = document.getElementById('duaDisplay');
+
+            if (duaDisplay.style.display === 'none') {
+                let duaHTML = '';
+
+                if (currentMode === 'iftar') {
+                    duaHTML = `
+                        <h3 style="color: #667eea; margin-bottom: 20px;">Dua for Iftar</h3>
+
+                        <div style="margin-bottom: 25px; padding: 15px; background: white; border-radius: 10px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">When Breaking Fast:</h4>
+                            <div style="font-size: 1.3em; margin-bottom: 8px; direction: rtl;">${duas.iftar.breaking.arabic}</div>
+                            <div style="font-style: italic; color: #666; margin-bottom: 8px;">${duas.iftar.breaking.transliteration}</div>
+                            <div style="color: #333;">${duas.iftar.breaking.english}</div>
+                        </div>
+
+                        <div style="margin-bottom: 25px; padding: 15px; background: white; border-radius: 10px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">After Breaking Fast:</h4>
+                            <div style="font-size: 1.3em; margin-bottom: 8px; direction: rtl;">${duas.iftar.after.arabic}</div>
+                            <div style="font-style: italic; color: #666; margin-bottom: 8px;">${duas.iftar.after.transliteration}</div>
+                            <div style="color: #333;">${duas.iftar.after.english}</div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 10px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">When Breaking Fast with a Group:</h4>
+                            <div style="font-size: 1.3em; margin-bottom: 8px; direction: rtl;">${duas.iftar.group.arabic}</div>
+                            <div style="font-style: italic; color: #666; margin-bottom: 8px;">${duas.iftar.group.transliteration}</div>
+                            <div style="color: #333;">${duas.iftar.group.english}</div>
+                        </div>
+                    `;
+                } else {
+                    duaHTML = `
+                        <h3 style="color: #667eea; margin-bottom: 20px;">Dua for Suhoor</h3>
+
+                        <div style="margin-bottom: 25px; padding: 15px; background: white; border-radius: 10px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">Before Suhoor:</h4>
+                            <div style="font-size: 1.3em; margin-bottom: 8px; direction: rtl;">${duas.suhoor.before.arabic}</div>
+                            <div style="font-style: italic; color: #666; margin-bottom: 8px;">${duas.suhoor.before.transliteration}</div>
+                            <div style="color: #333;">${duas.suhoor.before.english}</div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 10px;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">After Suhoor (Intention):</h4>
+                            <div style="font-size: 1.3em; margin-bottom: 8px; direction: rtl;">${duas.suhoor.after.arabic}</div>
+                            <div style="font-style: italic; color: #666; margin-bottom: 8px;">${duas.suhoor.after.transliteration}</div>
+                            <div style="color: #333;">${duas.suhoor.after.english}</div>
+                        </div>
+                    `;
+                }
+
+                // Add Taraweeh dua
+                duaHTML += `
+                    <div style="margin-top: 25px; padding: 15px; background: white; border-radius: 10px; border: 2px solid #667eea;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">Dua of Taraweeh:</h4>
+                        <div style="font-size: 1.3em; margin-bottom: 8px; direction: rtl;">${duas.taraweeh.arabic}</div>
+                        <div style="font-style: italic; color: #666; margin-bottom: 8px;">${duas.taraweeh.transliteration}</div>
+                        <div style="color: #333;">${duas.taraweeh.english}</div>
+                    </div>
+                `;
+
+                duaDisplay.innerHTML = duaHTML;
+                duaDisplay.style.display = 'block';
+            } else {
+                duaDisplay.style.display = 'none';
+            }
+        }
+
+        // Export to Calendar
+        function exportToCalendar() {
+            const [hours, mins] = (currentMode === 'iftar' ? iftarTimeToday : suhoorTimeToday).split(':');
+
+            let startDate, endDate, title, description;
+
+            if (currentMode === 'iftar') {
+                // Iftar: starts at iftar time, ends 30 minutes later
+                startDate = new Date();
+                startDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+                endDate = new Date(startDate.getTime() + 30 * 60000); // 30 minutes later
+                title = 'Iftar Time';
+                description = `Break your fast at ${mosqueData.name}, ${mosqueData.city}`;
+            } else {
+                // Suhoor: starts 30 minutes before, ends at Fajr time (cutoff)
+                endDate = new Date();
+                endDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+                startDate = new Date(endDate.getTime() - 30 * 60000); // 30 minutes before
+                title = 'Suhoor Time';
+                description = `Suhoor ends at ${formatTime(suhoorTimeToday)} (Fajr) at ${mosqueData.name}, ${mosqueData.city}`;
+            }
+
+            const location = `${mosqueData.name}, ${mosqueData.city}, CA`;
+
+            // Format dates for iCal
+            const formatDate = (date) => {
+                return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+
+            const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Iftar Countdown//EN
+BEGIN:VEVENT
+UID:${Date.now()}@iftar-countdown
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(startDate)}
+DTEND:${formatDate(endDate)}
+SUMMARY:${title}
+DESCRIPTION:${description}
+LOCATION:${location}
+END:VEVENT
+END:VCALENDAR`;
+
+            const blob = new Blob([icsContent], { type: 'text/calendar' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${title.toLowerCase().replace(' ', '-')}.ics`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Change Mosque
+        function changeMosque() {
+            const selectedMosque = document.getElementById('mosqueSelector').value;
+            localStorage.setItem('selectedMosque', selectedMosque);
+            location.reload();
+        }
+
+        // Change Language
+        function changeLanguage() {
+            const selectedLang = document.getElementById('langSelector').value;
+            localStorage.setItem('selectedLanguage', selectedLang);
+            location.reload();
+        }
+
+        // Initialize selectors
+        document.getElementById('mosqueSelector').value = currentMosque;
+        document.getElementById('langSelector').value = currentLang;
     </script>
 </body>
 </html>
