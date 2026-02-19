@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iftar Countdown - MCA Santa Clara</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .location {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .iftar-time {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .iftar-time h2 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .iftar-time .time {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .countdown {
+            margin: 30px 0;
+        }
+
+        .countdown h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .timer {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .time-unit {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 100px;
+        }
+
+        .time-unit .number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .time-unit .label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .date-info {
+            color: #666;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+        }
+
+        .creator {
+            font-size: 1.1em;
+            color: #667eea;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .time-unit {
+                min-width: 80px;
+                padding: 15px;
+            }
+
+            .time-unit .number {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌙 Iftar Countdown</h1>
+        <div class="location">Muslim Community Association<br>Santa Clara, California</div>
+
+        <div class="date-info" id="dateInfo">Loading...</div>
+
+        <div class="iftar-time">
+            <h2>Today's Iftar Time (Maghrib)</h2>
+            <div class="time" id="iftarTime">--:--</div>
+        </div>
+
+        <div class="countdown">
+            <h3>Time Until Iftar</h3>
+            <div class="timer">
+                <div class="time-unit">
+                    <span class="number" id="hours">0</span>
+                    <span class="label">Hours</span>
+                </div>
+                <div class="time-unit">
+                    <span class="number" id="minutes">0</span>
+                    <span class="label">Minutes</span>
+                </div>
+                <div class="time-unit">
+                    <span class="number" id="seconds">0</span>
+                    <span class="label">Seconds</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="footer">
+            <div>Ramadan Mubarak! 🌙</div>
+            <div class="creator">Created by Ramy Rady</div>
+        </div>
+    </div>
+
+    <script>
+        // Santa Clara, CA coordinates
+        const LATITUDE = 37.3541;
+        const LONGITUDE = -121.9552;
+
+        let iftarTimeToday = null;
+        let countdownInterval = null;
+
+        // Format time from 24hr to 12hr format
+        function formatTime(time24) {
+            const [hours, minutes] = time24.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${minutes} ${ampm}`;
+        }
+
+        // Fetch prayer times from Aladhan API
+        async function fetchPrayerTimes() {
+            try {
+                const today = new Date();
+                const timestamp = Math.floor(today.getTime() / 1000);
+
+                const response = await fetch(
+                    `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=2`
+                );
+
+                if (!response.ok) throw new Error('Failed to fetch prayer times');
+
+                const data = await response.json();
+                const timings = data.data.timings;
+                const date = data.data.date;
+
+                // Get Maghrib time (iftar time) and add 3 minutes to match MCA times
+                const maghribTime = timings.Maghrib;
+                const [hours, mins] = maghribTime.split(':');
+                const adjustedDate = new Date();
+                adjustedDate.setHours(parseInt(hours), parseInt(mins) + 3, 0, 0);
+                const adjustedHours = adjustedDate.getHours().toString().padStart(2, '0');
+                const adjustedMins = adjustedDate.getMinutes().toString().padStart(2, '0');
+                iftarTimeToday = `${adjustedHours}:${adjustedMins}`;
+
+                // Update UI
+                document.getElementById('iftarTime').textContent = formatTime(iftarTimeToday);
+
+                // Update date info
+                const hijriDate = date.hijri;
+                const gregorianDate = date.gregorian;
+                document.getElementById('dateInfo').textContent =
+                    `${gregorianDate.weekday.en}, ${gregorianDate.day} ${gregorianDate.month.en} ${gregorianDate.year} | ${hijriDate.day} ${hijriDate.month.en} ${hijriDate.year}`;
+
+                startCountdown();
+            } catch (error) {
+                console.error('Error fetching prayer times:', error);
+                document.getElementById('message').innerHTML =
+                    '<div class="error">Unable to fetch prayer times. Please check your internet connection and refresh the page.</div>';
+            }
+        }
+
+        // Start countdown timer
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+                const now = new Date();
+
+                // Parse iftar time for today
+                const [hours, minutes] = iftarTimeToday.split(':');
+                const iftarDate = new Date();
+                iftarDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+                // If iftar time has passed today, show message and fetch tomorrow's time
+                if (now > iftarDate) {
+                    document.getElementById('hours').textContent = '0';
+                    document.getElementById('minutes').textContent = '0';
+                    document.getElementById('seconds').textContent = '0';
+                    document.getElementById('message').innerHTML =
+                        '<div style="color: #667eea; font-size: 1.3em; font-weight: bold; margin: 20px 0;">Iftar time has passed for today! 🌙</div>';
+
+                    // Wait until midnight to refresh
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(0, 0, 0, 0);
+
+                    const timeUntilMidnight = tomorrow - now;
+                    setTimeout(() => {
+                        document.getElementById('message').innerHTML = '';
+                        fetchPrayerTimes();
+                    }, timeUntilMidnight);
+
+                    clearInterval(countdownInterval);
+                    return;
+                }
+
+                // Calculate time difference
+                const diff = iftarDate - now;
+                const hoursLeft = Math.floor(diff / (1000 * 60 * 60));
+                const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secondsLeft = Math.floor((diff % (1000 * 60)) / 1000);
+
+                // Update display
+                document.getElementById('hours').textContent = hoursLeft;
+                document.getElementById('minutes').textContent = minutesLeft;
+                document.getElementById('seconds').textContent = secondsLeft;
+            }, 1000);
+        }
+
+        // Initialize on page load
+        fetchPrayerTimes();
+
+        // Refresh prayer times at midnight every day
+        function scheduleNextDayRefresh() {
+            const now = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 1, 0); // 1 second after midnight
+
+            const timeUntilMidnight = tomorrow - now;
+            setTimeout(() => {
+                fetchPrayerTimes();
+                scheduleNextDayRefresh(); // Schedule next refresh
+            }, timeUntilMidnight);
+        }
+
+        scheduleNextDayRefresh();
+    </script>
+</body>
+</html>
