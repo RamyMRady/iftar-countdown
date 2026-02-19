@@ -464,10 +464,7 @@
         </div>
 
         <div class="volume-control">
-            <label>🔊 Volume:</label>
-            <button class="toggle-btn" onclick="adjustVolume(-10)" style="padding: 8px 16px; font-size: 1.2em;">−</button>
-            <span class="volume-value" id="volumeValue">70%</span>
-            <button class="toggle-btn" onclick="adjustVolume(10)" style="padding: 8px 16px; font-size: 1.2em;">+</button>
+            <button class="toggle-btn" id="muteBtn" onclick="toggleMute()" style="padding: 10px 24px; font-size: 1.1em;">🔊 Sound On</button>
         </div>
 
         <!-- Dua and Export buttons -->
@@ -745,7 +742,7 @@
             document.getElementById('azanBtn').textContent = t.playAzan;
             document.getElementById('cannonBtn').textContent = t.playCannon;
             document.getElementById('rainBtn').textContent = t.playRain;
-            document.getElementById('stopBtn').textContent = t.stop;
+            document.getElementById('muteBtn').textContent = isMuted ? '🔇 Sound Off' : '🔊 Sound On';
             document.querySelector('.volume-control label').textContent = t.volume;
             document.querySelector('.footer > div:first-child').textContent = t.ramadanMubarak;
             document.querySelector('.creator').textContent = t.createdBy;
@@ -775,23 +772,17 @@
         const azanAudio = document.getElementById('azanAudio');
         const cannonAudio = document.getElementById('cannonAudio');
         const rainAudio = document.getElementById('rainAudio');
-        let currentVolume = 70;
-        azanAudio.volume = 0.7;
-        cannonAudio.volume = 0.7;
-        rainAudio.volume = 0.7;
+        let isMuted = false;
 
-        function updateVolume(value) {
-            currentVolume = Math.min(100, Math.max(0, value));
-            const vol = currentVolume / 100;
-            azanAudio.volume = vol;
-            cannonAudio.volume = vol;
-            rainAudio.volume = vol;
-            if (currentAudio) currentAudio.volume = vol;
-            document.getElementById('volumeValue').textContent = currentVolume + '%';
-        }
-
-        function adjustVolume(delta) {
-            updateVolume(currentVolume + delta);
+        function toggleMute() {
+            isMuted = !isMuted;
+            azanAudio.muted = isMuted;
+            cannonAudio.muted = isMuted;
+            rainAudio.muted = isMuted;
+            if (currentAudio) currentAudio.muted = isMuted;
+            const btn = document.getElementById('muteBtn');
+            btn.textContent = isMuted ? '🔇 Sound Off' : '🔊 Sound On';
+            btn.classList.toggle('active', isMuted);
         }
 
         // Ramadan 2026 Prayer Timetables (Hardcoded from official mosque schedules)
@@ -1249,11 +1240,12 @@
                 hasNotified = true;
                 lastNotificationDate = today;
 
-                // Play azan automatically
-                const azanAudio = document.getElementById('azanAudio');
-                azanAudio.play().catch(() => {
-                    console.log('Auto-play blocked by browser');
-                });
+                // Play azan automatically (only if not muted)
+                if (!isMuted) {
+                    azanAudio.play().catch(() => {
+                        console.log('Auto-play blocked by browser');
+                    });
+                }
 
                 // Show notification
                 const message = currentMode === 'iftar' ? '🌙 Time for Iftar! 🌙' : '☀️ Time for Suhoor! ☀️';
