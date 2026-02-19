@@ -297,6 +297,13 @@
             50% { opacity: 0.8; transform: scale(1.05); }
         }
 
+        .ios-volume-note {
+            display: none;
+            margin: 20px 0;
+            color: #667eea;
+            font-size: 0.95em;
+        }
+
         .volume-control {
             margin: 20px 0;
             display: flex;
@@ -446,6 +453,9 @@
                 <option value="sbia">SBIA - San Jose</option>
                 <option value="alnoor">Masjid Al-Noor - Santa Clara</option>
                 <option value="mcc">MCC - Pleasanton</option>
+                <option value="wvma">WVMA - Saratoga</option>
+                <option value="icbab">ICBAB - San Jose</option>
+                <option value="ds">Masjid Darus Salaam - Milpitas</option>
             </select>
             <select id="langSelector" onchange="changeLanguage()" style="padding: 8px; border-radius: 6px; border: 2px solid #667eea;">
                 <option value="en">English</option>
@@ -494,10 +504,13 @@
             <button class="audio-btn" id="stopBtn" onclick="stopAudio()" style="display: none;">⏸️ Stop</button>
         </div>
 
-        <div class="volume-control">
+        <div class="volume-control" id="volumeControl">
             <label for="volumeSlider">🔊 Volume:</label>
             <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70" oninput="updateVolume(this.value)" onchange="updateVolume(this.value)">
             <span class="volume-value" id="volumeValue">70%</span>
+        </div>
+        <div class="ios-volume-note" id="iosVolumeNote">
+            🔊 Use your iPhone's volume buttons to adjust audio
         </div>
 
         <!-- Dua and Export buttons -->
@@ -514,6 +527,8 @@
             <div class="creator">Created by Ramy Rady</div>
             <div style="margin-top: 10px;">
                 <a href="#" id="mosqueLink" target="_blank" class="mca-link"></a>
+                &nbsp;|&nbsp;
+                <a href="#" id="directionsLink" target="_blank" class="mca-link">📍 Get Directions</a>
             </div>
 
             <div class="share-buttons">
@@ -549,7 +564,8 @@
                 lng: -121.9552,
                 adjustment: 3, // minutes to add to Maghrib
                 website: 'https://www.mcabayarea.org',
-                linkText: 'Visit MCA Bay Area'
+                linkText: 'Visit MCA',
+                address: '3003 Scott Blvd, Santa Clara, CA 95054'
             },
             sbia: {
                 name: 'South Bay Islamic Association',
@@ -558,7 +574,8 @@
                 lng: -121.8634,
                 adjustment: 3,
                 website: 'https://sbia.info',
-                linkText: 'Visit SBIA'
+                linkText: 'Visit SBIA',
+                address: '3090 Moorpark Ave, San Jose, CA 95128'
             },
             alnoor: {
                 name: 'Masjid Al-Noor',
@@ -567,7 +584,8 @@
                 lng: -121.9644,
                 adjustment: 3,
                 website: 'https://www.mcabayarea.org/prayerschedule-noor/',
-                linkText: 'Visit Masjid Al-Noor'
+                linkText: 'Visit Masjid Al-Noor',
+                address: '225 Cypress Ave, Santa Clara, CA 95050'
             },
             mcc: {
                 name: 'Muslim Community Center',
@@ -576,7 +594,38 @@
                 lng: -121.8747,
                 adjustment: 3,
                 website: 'https://mcceastbay.org',
-                linkText: 'Visit MCC East Bay'
+                linkText: 'Visit MCC',
+                address: '4455 Stoneridge Dr, Pleasanton, CA 94588'
+            },
+            wvma: {
+                name: 'West Valley Muslim Association',
+                city: 'Saratoga',
+                lat: 37.2638,
+                lng: -122.0231,
+                adjustment: 0,
+                website: 'https://wvmuslim.org/',
+                linkText: 'Visit WVMA',
+                address: '20688 Prospect Rd, Saratoga, CA 95070'
+            },
+            icbab: {
+                name: 'Islamic Community in Bosnia and Herzegovina',
+                city: 'San Jose',
+                lat: 37.3382,
+                lng: -121.8863,
+                adjustment: 0,
+                website: 'https://icbab.org/',
+                linkText: 'Visit ICBAB',
+                address: '3003 Berryessa Rd, San Jose, CA 95132'
+            },
+            ds: {
+                name: 'Masjid Darus Salaam',
+                city: 'Milpitas',
+                lat: 37.4323,
+                lng: -121.8996,
+                adjustment: 0,
+                website: 'https://dsmasjid.com',
+                linkText: 'Visit Masjid Darus Salaam',
+                address: '374 Turquoise St, Milpitas, CA 95035'
             }
         };
 
@@ -587,7 +636,8 @@
         // Update mosque location and link on page load
         document.getElementById('mosqueLocation').innerHTML = mosqueData.name + '<br>' + mosqueData.city + ', California';
         document.getElementById('mosqueLink').href = mosqueData.website;
-        document.getElementById('mosqueLink').textContent = mosqueData.linkText + ' →';
+        document.getElementById('mosqueLink').textContent = mosqueData.name + ' Website';
+        document.getElementById('directionsLink').href = 'https://maps.apple.com/?q=' + encodeURIComponent(mosqueData.address);
 
         // Coordinates from selected mosque
         const LATITUDE = mosqueData.lat;
@@ -779,7 +829,8 @@
             document.querySelector('.volume-control label').textContent = t.volume;
             document.querySelector('.footer > div:first-child').textContent = t.ramadanMubarak;
             document.querySelector('.creator').textContent = t.createdBy;
-            document.getElementById('mosqueLink').textContent = t.visitMosque;
+            document.getElementById('mosqueLink').textContent = mosqueData.name + ' Website';
+            document.getElementById('directionsLink').href = 'https://maps.apple.com/?q=' + encodeURIComponent(mosqueData.address);
             document.querySelector('.share-btn.share-whatsapp').textContent = t.shareWhatsApp;
             document.querySelector('.share-btn.share-twitter').textContent = t.shareTwitter;
             document.querySelector('.share-btn.share-facebook').textContent = t.shareFacebook;
@@ -808,6 +859,13 @@
         azanAudio.volume = 0.7;
         cannonAudio.volume = 0.7;
         rainAudio.volume = 0.7;
+
+        // iOS does not allow volume control via JS — hide slider and show note instead
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            document.getElementById('volumeControl').style.display = 'none';
+            document.getElementById('iosVolumeNote').style.display = 'block';
+        }
 
         // Update volume for all audio elements
         function updateVolume(value) {
@@ -922,6 +980,108 @@
 
         // Al-Noor uses same timetable as MCA
         ramadanTimetable2026.alnoor = ramadanTimetable2026.mca;
+
+        // ICBAB timetable (Islamic Community in Bosnia and Herzegovina, San Jose)
+        ramadanTimetable2026.icbab = [
+            { date: '2026-02-18', fajr: '05:40', maghrib: '17:52' },
+            { date: '2026-02-19', fajr: '05:40', maghrib: '17:52' },
+            { date: '2026-02-20', fajr: '05:40', maghrib: '17:53' },
+            { date: '2026-02-21', fajr: '05:40', maghrib: '17:54' },
+            { date: '2026-02-22', fajr: '05:40', maghrib: '17:55' },
+            { date: '2026-02-23', fajr: '05:40', maghrib: '17:56' },
+            { date: '2026-02-24', fajr: '05:40', maghrib: '17:57' },
+            { date: '2026-02-25', fajr: '05:40', maghrib: '17:58' },
+            { date: '2026-02-26', fajr: '05:40', maghrib: '17:59' },
+            { date: '2026-02-27', fajr: '05:39', maghrib: '18:00' },
+            { date: '2026-02-28', fajr: '05:38', maghrib: '18:01' },
+            { date: '2026-03-01', fajr: '05:37', maghrib: '18:02' },
+            { date: '2026-03-02', fajr: '05:36', maghrib: '18:03' },
+            { date: '2026-03-03', fajr: '05:35', maghrib: '18:04' },
+            { date: '2026-03-04', fajr: '05:34', maghrib: '18:05' },
+            { date: '2026-03-05', fajr: '05:33', maghrib: '18:06' },
+            { date: '2026-03-06', fajr: '05:32', maghrib: '18:07' },
+            { date: '2026-03-07', fajr: '05:31', maghrib: '18:08' },
+            { date: '2026-03-08', fajr: '06:30', maghrib: '19:08' }, // DST change
+            { date: '2026-03-09', fajr: '06:29', maghrib: '19:09' },
+            { date: '2026-03-10', fajr: '06:27', maghrib: '19:10' },
+            { date: '2026-03-11', fajr: '06:26', maghrib: '19:11' },
+            { date: '2026-03-12', fajr: '06:25', maghrib: '19:12' },
+            { date: '2026-03-13', fajr: '06:23', maghrib: '19:13' },
+            { date: '2026-03-14', fajr: '06:22', maghrib: '19:14' },
+            { date: '2026-03-15', fajr: '06:21', maghrib: '19:15' },
+            { date: '2026-03-16', fajr: '06:19', maghrib: '19:16' },
+            { date: '2026-03-17', fajr: '06:18', maghrib: '19:17' },
+            { date: '2026-03-18', fajr: '06:17', maghrib: '19:18' },
+            { date: '2026-03-19', fajr: '06:15', maghrib: '19:19' }
+        ];
+
+        // WVMA timetable (from official Ramadan 1447 booklet)
+        ramadanTimetable2026.wvma = [
+            { date: '2026-02-18', fajr: '05:41', maghrib: '18:00' },
+            { date: '2026-02-19', fajr: '05:40', maghrib: '18:00' },
+            { date: '2026-02-20', fajr: '05:38', maghrib: '18:01' },
+            { date: '2026-02-21', fajr: '05:37', maghrib: '18:02' },
+            { date: '2026-02-22', fajr: '05:36', maghrib: '18:03' },
+            { date: '2026-02-23', fajr: '05:34', maghrib: '18:04' },
+            { date: '2026-02-24', fajr: '05:33', maghrib: '18:05' },
+            { date: '2026-02-25', fajr: '05:32', maghrib: '18:06' },
+            { date: '2026-02-26', fajr: '05:31', maghrib: '18:07' },
+            { date: '2026-02-27', fajr: '05:30', maghrib: '18:08' },
+            { date: '2026-02-28', fajr: '05:28', maghrib: '18:09' },
+            { date: '2026-03-01', fajr: '05:27', maghrib: '18:10' },
+            { date: '2026-03-02', fajr: '05:26', maghrib: '18:11' },
+            { date: '2026-03-03', fajr: '05:24', maghrib: '18:12' },
+            { date: '2026-03-04', fajr: '05:23', maghrib: '18:13' },
+            { date: '2026-03-05', fajr: '05:21', maghrib: '18:14' },
+            { date: '2026-03-06', fajr: '05:20', maghrib: '18:15' },
+            { date: '2026-03-07', fajr: '05:19', maghrib: '18:16' },
+            { date: '2026-03-08', fajr: '06:17', maghrib: '19:17' }, // DST change
+            { date: '2026-03-09', fajr: '06:16', maghrib: '19:17' },
+            { date: '2026-03-10', fajr: '06:15', maghrib: '19:18' },
+            { date: '2026-03-11', fajr: '06:13', maghrib: '19:19' },
+            { date: '2026-03-12', fajr: '06:11', maghrib: '19:20' },
+            { date: '2026-03-13', fajr: '06:10', maghrib: '19:21' },
+            { date: '2026-03-14', fajr: '06:08', maghrib: '19:22' },
+            { date: '2026-03-15', fajr: '06:07', maghrib: '19:22' },
+            { date: '2026-03-16', fajr: '06:05', maghrib: '19:23' },
+            { date: '2026-03-17', fajr: '06:04', maghrib: '19:24' },
+            { date: '2026-03-18', fajr: '06:02', maghrib: '19:25' },
+            { date: '2026-03-19', fajr: '06:01', maghrib: '19:26' }
+        ];
+
+        // Masjid Darus Salaam timetable (Milpitas, CA - from official Ramadan 2026 prayer timings)
+        ramadanTimetable2026.ds = [
+            { date: '2026-02-18', fajr: '05:41', maghrib: '17:54' },
+            { date: '2026-02-19', fajr: '05:40', maghrib: '17:55' },
+            { date: '2026-02-20', fajr: '05:38', maghrib: '17:56' },
+            { date: '2026-02-21', fajr: '05:37', maghrib: '17:57' },
+            { date: '2026-02-22', fajr: '05:36', maghrib: '17:58' },
+            { date: '2026-02-23', fajr: '05:35', maghrib: '17:59' },
+            { date: '2026-02-24', fajr: '05:34', maghrib: '18:00' },
+            { date: '2026-02-25', fajr: '05:32', maghrib: '18:01' },
+            { date: '2026-02-26', fajr: '05:31', maghrib: '18:02' },
+            { date: '2026-02-27', fajr: '05:30', maghrib: '18:03' },
+            { date: '2026-02-28', fajr: '05:28', maghrib: '18:04' },
+            { date: '2026-03-01', fajr: '05:27', maghrib: '18:05' },
+            { date: '2026-03-02', fajr: '05:26', maghrib: '18:06' },
+            { date: '2026-03-03', fajr: '05:24', maghrib: '18:07' },
+            { date: '2026-03-04', fajr: '05:23', maghrib: '18:08' },
+            { date: '2026-03-05', fajr: '05:22', maghrib: '18:09' },
+            { date: '2026-03-06', fajr: '05:20', maghrib: '18:09' },
+            { date: '2026-03-07', fajr: '05:19', maghrib: '18:11' },
+            { date: '2026-03-08', fajr: '06:17', maghrib: '19:11' }, // DST change
+            { date: '2026-03-09', fajr: '06:16', maghrib: '19:12' },
+            { date: '2026-03-10', fajr: '06:14', maghrib: '19:13' },
+            { date: '2026-03-11', fajr: '06:13', maghrib: '19:13' },
+            { date: '2026-03-12', fajr: '06:11', maghrib: '19:14' },
+            { date: '2026-03-13', fajr: '06:10', maghrib: '19:15' },
+            { date: '2026-03-14', fajr: '06:08', maghrib: '19:16' },
+            { date: '2026-03-15', fajr: '06:07', maghrib: '19:17' },
+            { date: '2026-03-16', fajr: '06:05', maghrib: '19:17' },
+            { date: '2026-03-17', fajr: '06:04', maghrib: '19:18' },
+            { date: '2026-03-18', fajr: '06:02', maghrib: '19:19' },
+            { date: '2026-03-19', fajr: '06:01', maghrib: '19:22' }
+        ];
 
         // Get prayer times from hardcoded timetable
         function getPrayerTimesFromTimetable() {
